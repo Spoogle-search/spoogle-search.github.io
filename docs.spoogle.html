@@ -1,13 +1,10 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
 <title>Spoogle Docs</title>
 
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Slackey&display=swap');
 
 /* --- Krabby Patty Font --- */
@@ -17,16 +14,10 @@
 
 .slackey-regular {
   font-family: "Slackey", sans-serif;
-  font-weight: 400;
-  font-style: normal;
 }
 
-
-
+/* --- BODY --- */
 body {
-font-family: "", sans-serif;
-  font-weight: 400;
-  font-style: normal;
   background: url("background.jpg") no-repeat center center fixed;
 }
 
@@ -47,35 +38,48 @@ body > * { position: relative; z-index: 1; }
     justify-content: space-between;
     background: linear-gradient(90deg, #ffec00, #ffe000);
     padding: 8px 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
-.logo-container { display: flex; align-items: center; gap: 8px; }
-.logo-img { height: 36px; width: auto; } 
-.docs-text { font-size: 24px; font-weight: bold; color: #0055ff; }
+.logo-img { height: 36px; }
 
-/* --- SEARCH FORM --- */
-.search-form { flex: 1; display: flex; align-items: center; margin-left: 20px; }
-.search-form input { flex: 1; padding: 6px 10px; border-radius: 20px; border: 1px solid #aaa; outline: none; font-size: 16px; }
-.search-form button { margin-left: 5px; padding: 6px 12px; border: none; background: #00aaff; color: white; border-radius: 20px; cursor: pointer; }
-.search-form button:hover { background: #0088cc; }
+/* --- SEARCH --- */
+.search-form {
+    flex: 1;
+    display: flex;
+    margin-left: 20px;
+}
 
-/* --- DOCUMENT CONTROLS --- */
-.doc-controls { display: flex; gap: 12px; margin-left: 20px; }
-.doc-controls button, .doc-controls select { padding: 6px 12px; border-radius: 12px; border: none; cursor: pointer, Arial, sans-serif; }
-.doc-controls button { background: #ffcc00; font-weight: bold; }
-.doc-controls button:hover { background: #ffdd33; }
+.search-form input {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 20px;
+}
 
-/* --- TOP RIGHT --- */
-.top-right-menu { display: flex; align-items: center; gap: 12px; }
-.apps-btn { width: 36px; height: 36px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.apps-btn:hover { background: #eee; }
-.account-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
+.search-form button {
+    margin-left: 5px;
+    padding: 6px 12px;
+    background: #00aaff;
+    color: white;
+    border-radius: 20px;
+}
 
-/* --- DOCUMENT EDITOR --- */
+/* --- DOC CONTROLS --- */
+.doc-controls { display: flex; gap: 10px; margin-left: 20px; }
+
+.doc-controls button {
+    background: #ffcc00;
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+/* --- AVATAR --- */
+.account-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+}
+
+/* --- EDITOR --- */
 .editor-container {
     margin: 20px auto;
     width: 90%;
@@ -84,20 +88,13 @@ body > * { position: relative; z-index: 1; }
     background: rgba(255,255,255,0.95);
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
 }
 
 #docEditor {
-    flex: 1;
     width: 100%;
+    height: 100%;
     border: none;
-    outline: none;
-    resize: none;
     font-size: 16px;
-    line-height: 1.5;
-    background: transparent;
 }
 </style>
 </head>
@@ -106,52 +103,45 @@ body > * { position: relative; z-index: 1; }
 
 <!-- TOP BAR -->
 <div class="top-bar">
-    <div style="display:flex; align-items:center;">
-        <div id="logo">
-            <img src="./docs.png" alt="Docs Logo" class="logo-img">
-        </div>
+    <img src="./docs.png" class="logo-img">
 
-        <form class="search-form">
-            <input type="text" placeholder="Search Spoogle Docs" id="docSearch">
-            <button type="button">🔍</button>
-        </form>
+    <form class="search-form">
+        <input type="text" placeholder="Search Spoogle Docs" id="docSearch">
+        <button type="button">🔍</button>
+    </form>
 
-        <div class="doc-controls">
-            <button id="newDocBtn" class="slackey-regular">New Document</button>
-            <select id="docList"></select>
-            <button id="saveBtn" class="slackey-regular">Save</button>
-        </div>
+    <div class="doc-controls">
+        <button id="newDocBtn">New</button>
+        <select id="docList"></select>
+        <button id="saveBtn">Save</button>
     </div>
 
-    <div class="top-right-menu">
-        <div class="apps-btn" title="Spoogle Apps">⚙️</div>
-        <button id="loginBtn">Login / Set Username</button>
-        <img src="avatar.png" class="account-avatar" id="avatar" title="Your Account">
-    </div>
+    <button id="loginBtn">Login</button>
+    <img src="avatar.png" class="account-avatar" id="avatar">
 </div>
 
-<!-- DOCUMENT EDITOR -->
-<div class="editor-container" class="slackey-regular">
-    <textarea id="docEditor" placeholder="Start typing your document here..." class="slackey-regular"></textarea>
+<!-- EDITOR -->
+<div class="editor-container">
+    <textarea id="docEditor"></textarea>
 </div>
 
 <script>
-// --- AVATAR SELECTION ---
+// --- AVATAR SYSTEM ---
 const loginBtn = document.getElementById("loginBtn");
 const avatar = document.getElementById("avatar");
 
-// --- Replace these 10 images with your own ---
+// ✅ YOUR AVATARS
 const avatarOptions = [
-    "./SpongeBob_SquarePants_Karen_Porthole.jpg",
-    "./SpongeBob_SquarePants_Mrs_Puff_Porthole.jpg",
-    "./SpongeBob_SquarePants_Plankton_Porthole.jpg",
-    "./SpongeBob_SquarePants_Porthole.jpg",
-    "./SpongeBob_SquarePants_Sandy_Porthole.jpg",
-    "./SpongeBob_SquarePants_Squidward_Porthole.jpg",
-    "./krabs.jpg",
-    "./Patrick.jpg",
-    "./Pearl.jpg",
-    "./gary-come-home.png"
+    "Cheeks-avatar.png",
+    "Spongebob-avatar.png",
+    "Squidward-avatar.png",
+    "Computer-lady-avatar.png",
+    "Gary-avatar.png",
+    "Krabs-avatar.png",
+    "One celled organisim-avatar.png",
+    "Patrick-avatar.png",
+    "Puff-avatar.png",
+    ""
 ];
 
 let user = JSON.parse(localStorage.getItem("spoogleUser")) || null;
@@ -161,149 +151,98 @@ if(user){
     loginBtn.textContent = user.name;
 }
 
-// Show avatar picker popup
+// Avatar picker
 function chooseAvatar(){
-    let avatarHTML = avatarOptions.map((src,i) =>
-        `<img src="${src}" data-index="${i}" style="width:60px;height:60px;margin:5px;cursor:pointer;border:2px solid #ccc;border-radius:50%;">`
+    let avatarHTML = avatarOptions
+        .filter(src => src !== "")
+        .map((src,i) =>
+        `<img src="${src}" data-index="${i}"
+        style="width:60px;height:60px;margin:5px;cursor:pointer;border-radius:50%;">`
     ).join('');
 
-    const container = document.createElement('div');
-    container.innerHTML = `
-        <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;">
+    const popup = document.createElement('div');
+    popup.innerHTML = `
+        <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);
+        display:flex;align-items:center;justify-content:center;">
             <div style="background:#fff;padding:20px;border-radius:12px;text-align:center;">
-                <h3>Select Your Avatar</h3>
-                <div style="display:flex;flex-wrap:wrap;justify-content:center;">${avatarHTML}</div>
-                <button id="cancelAvatar" style="margin-top:10px;padding:5px 10px;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+                <h3>Select Avatar</h3>
+                ${avatarHTML}
+                <br><br>
+                <button id="cancelAvatar">Cancel</button>
             </div>
         </div>
     `;
-    document.body.appendChild(container);
+    document.body.appendChild(popup);
 
-    container.querySelectorAll('img').forEach(img=>{
-        img.addEventListener('click',()=>{
-            const index = img.dataset.index;
-            user.avatar = avatarOptions[index];
-            avatar.src = user.avatar;
+    popup.querySelectorAll('img').forEach(img=>{
+        img.onclick = ()=>{
+            user.avatar = img.src;
+            avatar.src = img.src;
             localStorage.setItem("spoogleUser", JSON.stringify(user));
-            loginBtn.textContent = user.name;
-            document.body.removeChild(container);
-        });
+            popup.remove();
+        };
     });
 
-    container.querySelector('#cancelAvatar').addEventListener('click',()=>{
-        document.body.removeChild(container);
-    });
+    document.getElementById("cancelAvatar").onclick = ()=> popup.remove();
 }
 
-// Login / Set Username
-loginBtn.addEventListener("click",()=>{
-    const name = prompt("Enter your username:", user ? user.name : "");
+// Login
+loginBtn.onclick = ()=>{
+    const name = prompt("Username?");
     if(!name) return;
-    user = {name, avatar: user ? user.avatar : avatarOptions[0]};
+
+    user = { name, avatar: avatarOptions[0] };
     localStorage.setItem("spoogleUser", JSON.stringify(user));
+
     loginBtn.textContent = name;
     chooseAvatar();
-});
+};
 
-// Reset or change avatar on click
-avatar.addEventListener("click",()=>{
-    if(confirm("Reset user?")){
-        localStorage.removeItem("spoogleUser");
-        avatar.src = "avatar.png";
-        loginBtn.textContent = "Login / Set Username";
-        user = null;
-    } else {
-        chooseAvatar();
-    }
-});
+// Change avatar
+avatar.onclick = ()=>{
+    if(user) chooseAvatar();
+};
 
-// --- MULTI-DOCUMENT SUPPORT ---
+// --- DOC SYSTEM ---
 let documents = JSON.parse(localStorage.getItem('spoogleDocs') || '{}');
 let currentDoc = null;
 
 const editor = document.getElementById('docEditor');
 const docList = document.getElementById('docList');
-const newDocBtn = document.getElementById('newDocBtn');
-const saveBtn = document.getElementById('saveBtn');
-const docSearch = document.getElementById('docSearch');
 
-function refreshDocList(filter=''){
-    docList.innerHTML='';
-    Object.keys(documents)
-        .filter(docName=>docName.toLowerCase().includes(filter.toLowerCase()))
-        .forEach(docName=>{
-            const option=document.createElement('option');
-            option.value=docName;
-            option.textContent=docName;
-            docList.appendChild(option);
-        });
+function refreshDocs(){
+    docList.innerHTML = "";
+    Object.keys(documents).forEach(name=>{
+        let opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        docList.appendChild(opt);
+    });
 }
 
-function loadDoc(name){
-    currentDoc=name;
-    editor.value=documents[name]||'';
-    docList.value=name;
-}
+document.getElementById('newDocBtn').onclick = ()=>{
+    let name = prompt("Doc name?");
+    if(!name) return;
 
-newDocBtn.addEventListener('click',()=>{
-    const name = prompt("Enter new document name:");
-    if(name && !documents[name]){
-        documents[name]='';
-        localStorage.setItem('spoogleDocs', JSON.stringify(documents));
-        refreshDocList();
-        loadDoc(name);
-    } else if(documents[name]){
-        alert("Document with this name already exists!");
-    }
-});
+    documents[name] = "";
+    localStorage.setItem('spoogleDocs', JSON.stringify(documents));
+    refreshDocs();
+};
 
-function saveCurrentDoc(){
+document.getElementById('saveBtn').onclick = ()=>{
     if(currentDoc){
-        documents[currentDoc]=editor.value;
+        documents[currentDoc] = editor.value;
         localStorage.setItem('spoogleDocs', JSON.stringify(documents));
+        alert("Saved!");
     }
-}
+};
 
-saveBtn.addEventListener('click',()=>{
-    saveCurrentDoc();
-    alert("Document saved!");
-});
+docList.onchange = ()=>{
+    currentDoc = docList.value;
+    editor.value = documents[currentDoc] || "";
+};
 
-editor.addEventListener('input',()=>{
-    saveCurrentDoc();
-});
-
-docList.addEventListener('change',()=>{
-    loadDoc(docList.value);
-});
-
-docSearch.addEventListener('input',()=>{
-    const filter = docSearch.value;
-    refreshDocList(filter);
-    const exactMatch = Object.keys(documents).find(d => d.toLowerCase()===filter.toLowerCase());
-    if(exactMatch) loadDoc(exactMatch);
-});
-
-docSearch.addEventListener('keypress',(e)=>{
-    if(e.key==='Enter'){
-        e.preventDefault();
-        const searchValue = docSearch.value.trim();
-        if(!documents[searchValue]){
-            if(confirm(`Document "${searchValue}" does not exist. Create it?`)){
-                documents[searchValue]='';
-                localStorage.setItem('spoogleDocs', JSON.stringify(documents));
-                refreshDocList();
-                loadDoc(searchValue);
-            }
-        } else {
-            loadDoc(searchValue);
-        }
-    }
-});
-
-// --- Initialize ---
-refreshDocList();
-if(Object.keys(documents).length>0) loadDoc(Object.keys(documents)[0]);
+refreshDocs();
 </script>
 
 </body>
