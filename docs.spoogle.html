@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -127,8 +126,8 @@ body > * { position: relative; z-index: 1; }
         <button id="saveBtn">Save</button>
     </div>
 
-    <button id="loginBtn">Login</button>
-    <img src="avatar.png" class="account-avatar" id="avatar">
+    <button id="loginBtn">ccc</button>
+    <img src="Cheeks-avatar.jpg" class="account-avatar" id="avatar">
 </div>
 
 <!-- EDITOR -->
@@ -158,7 +157,7 @@ const avatarOptions = [
 let user = JSON.parse(localStorage.getItem("spoogleUser")) || null;
 
 if(user){
-    avatar.src = user.avatar || "avatar.png";
+    avatar.src = user.avatar || "avatar.jpg";
     loginBtn.textContent = user.name;
 }
 
