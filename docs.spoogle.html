@@ -1,31 +1,32 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spoogle Docs</title>
 
+<!-- GOOGLE FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Slackey&display=swap" rel="stylesheet">
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Slackey&display=swap');
 
-/* --- Krabby Patty Font --- */
-@font-face {
-    src: url('KrabbyPatty.ttf') format('truetype');
-}
-
+/* ✅ MAIN FONT CLASS */
 .slackey-regular {
-  font-family: "Slackey", sans-serif;
+    font-family: "Slackey", sans-serif;
 }
 
 /* --- BODY --- */
 body {
-  background: url("background.jpg") no-repeat center center fixed;
+    background: url("background.jpg") no-repeat center center fixed;
+    margin: 0;
 }
 
+/* --- OVERLAY --- */
 body::before {
     content: "";
-    position: absolute;
+    position: fixed;
     inset: 0;
-    background: rgba(255, 255, 0, 0.15);
+    background: rgba(255,255,0,0.15);
     z-index: 0;
 }
 
@@ -37,7 +38,7 @@ body > * { position: relative; z-index: 1; }
     align-items: center;
     justify-content: space-between;
     background: linear-gradient(90deg, #ffec00, #ffe000);
-    padding: 8px 15px;
+    padding: 10px;
 }
 
 .logo-img { height: 36px; }
@@ -46,37 +47,44 @@ body > * { position: relative; z-index: 1; }
 .search-form {
     flex: 1;
     display: flex;
-    margin-left: 20px;
+    margin: 0 15px;
 }
 
 .search-form input {
     flex: 1;
-    padding: 6px 10px;
+    padding: 6px;
     border-radius: 20px;
+    border: 1px solid #aaa;
 }
 
 .search-form button {
     margin-left: 5px;
     padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
     background: #00aaff;
     color: white;
-    border-radius: 20px;
+    cursor: pointer;
 }
 
 /* --- DOC CONTROLS --- */
-.doc-controls { display: flex; gap: 10px; margin-left: 20px; }
+.doc-controls { display: flex; gap: 10px; }
 
 .doc-controls button {
     background: #ffcc00;
     border-radius: 10px;
     padding: 6px 10px;
+    border: none;
+    cursor: pointer;
 }
 
 /* --- AVATAR --- */
 .account-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    border: 2px solid white;
+    cursor: pointer;
 }
 
 /* --- EDITOR --- */
@@ -95,7 +103,10 @@ body > * { position: relative; z-index: 1; }
     height: 100%;
     border: none;
     font-size: 16px;
+    resize: none;
+    outline: none;
 }
+
 </style>
 </head>
 
@@ -103,7 +114,7 @@ body > * { position: relative; z-index: 1; }
 
 <!-- TOP BAR -->
 <div class="top-bar">
-    <img src="./docs.png" class="logo-img">
+    <img src="docs.png" class="logo-img">
 
     <form class="search-form">
         <input type="text" placeholder="Search Spoogle Docs" id="docSearch">
@@ -122,25 +133,25 @@ body > * { position: relative; z-index: 1; }
 
 <!-- EDITOR -->
 <div class="editor-container">
-    <textarea id="docEditor"></textarea>
+    <textarea id="docEditor" placeholder="Start typing..."></textarea>
 </div>
 
 <script>
+
 // --- AVATAR SYSTEM ---
 const loginBtn = document.getElementById("loginBtn");
 const avatar = document.getElementById("avatar");
 
-// ✅ YOUR AVATARS
 const avatarOptions = [
-    "Cheeks-avatar.png",
-    "Spongebob-avatar.png",
-    "Squidward-avatar.png",
-    "Computer-lady-avatar.png",
-    "Gary-avatar.png",
-    "Krabs-avatar.png",
-    "One celled organisim-avatar.png",
-    "Patrick-avatar.png",
-    "Puff-avatar.png",
+    "Cheeks-avatar.jpg",
+    "Spongebob-avatar.jpg",
+    "Squidward-avatar.jpg",
+    "Computer-lady-avatar.jpg",
+    "Gary-avatar.jpg",
+    "Krabs-avatar.jpg",
+    "One celled organisim-avatar.jpg",
+    "Patrick-avatar.jpg",
+    "Puff-avatar.jpg",
     ""
 ];
 
@@ -155,40 +166,40 @@ if(user){
 function chooseAvatar(){
     let avatarHTML = avatarOptions
         .filter(src => src !== "")
-        .map((src,i) =>
-        `<img src="${src}" data-index="${i}"
-        style="width:60px;height:60px;margin:5px;cursor:pointer;border-radius:50%;">`
-    ).join('');
+        .map(src => `
+            <img src="${src}" 
+            style="width:70px;height:70px;margin:6px;border-radius:50%;cursor:pointer;border:2px solid #ccc;">
+        `).join('');
 
-    const popup = document.createElement('div');
+    const popup = document.createElement("div");
     popup.innerHTML = `
         <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);
-        display:flex;align-items:center;justify-content:center;">
-            <div style="background:#fff;padding:20px;border-radius:12px;text-align:center;">
-                <h3>Select Avatar</h3>
-                ${avatarHTML}
-                <br><br>
-                <button id="cancelAvatar">Cancel</button>
+        display:flex;align-items:center;justify-content:center;z-index:9999;">
+            <div style="background:white;padding:20px;border-radius:12px;text-align:center;">
+                <h2>Select Your Avatar</h2>
+                <div>${avatarHTML}</div>
+                <br>
+                <button id="closeAvatar">Cancel</button>
             </div>
         </div>
     `;
     document.body.appendChild(popup);
 
-    popup.querySelectorAll('img').forEach(img=>{
+    popup.querySelectorAll("img").forEach(img=>{
         img.onclick = ()=>{
-            user.avatar = img.src;
-            avatar.src = img.src;
+            user.avatar = img.getAttribute("src");
+            avatar.src = user.avatar;
             localStorage.setItem("spoogleUser", JSON.stringify(user));
             popup.remove();
         };
     });
 
-    document.getElementById("cancelAvatar").onclick = ()=> popup.remove();
+    document.getElementById("closeAvatar").onclick = ()=> popup.remove();
 }
 
 // Login
 loginBtn.onclick = ()=>{
-    const name = prompt("Username?");
+    const name = prompt("Enter username:");
     if(!name) return;
 
     user = { name, avatar: avatarOptions[0] };
@@ -221,7 +232,7 @@ function refreshDocs(){
 }
 
 document.getElementById('newDocBtn').onclick = ()=>{
-    let name = prompt("Doc name?");
+    let name = prompt("Document name?");
     if(!name) return;
 
     documents[name] = "";
@@ -243,6 +254,7 @@ docList.onchange = ()=>{
 };
 
 refreshDocs();
+
 </script>
 
 </body>
