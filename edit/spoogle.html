@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SPOOGLE 75 MODE 🌟✨</title>
+  <title>SPOOGLE NEON LIGHT 🌊✨</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #05070a; }
+    body { margin: 0; overflow: hidden; background: #001018; }
     canvas { display: block; }
   </style>
 </head>
@@ -15,7 +15,8 @@
 
 // 🌊 SCENE
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05070a);
+scene.background = new THREE.Color(0x001018);
+scene.fog = new THREE.Fog(0x001018, 5, 20);
 
 // 🎥 CAMERA
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
@@ -24,104 +25,125 @@ camera.position.set(0, 1.5, 7);
 // 🎮 RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; // 🌟 enable shadows
 document.body.appendChild(renderer.domElement);
 
-// 💡 LIGHTS (🔥 HIGH BRIGHTNESS MODE)
-const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-scene.add(ambient);
+// 💡 GLOBAL LIGHTING
+scene.add(new THREE.AmbientLight(0x88ccff, 0.4));
 
-const light = new THREE.PointLight(0xffffff, 3.5, 50);
-light.position.set(3, 3, 3);
-scene.add(light);
+// 🌞 MAIN LIGHT (casts real light)
+const keyLight = new THREE.PointLight(0xffffff, 2, 30);
+keyLight.position.set(0, 3, 3);
+keyLight.castShadow = true;
+scene.add(keyLight);
 
-// 🌊 GROUP
+// 🌊 UNDERWATER BLUE LIGHT
+const blueGlow = new THREE.PointLight(0x00aaff, 1.5, 30);
+blueGlow.position.set(-2, 2, 2);
+scene.add(blueGlow);
+
+// 🌊 FLOOR (receives light)
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(30, 30),
+  new THREE.MeshStandardMaterial({
+    color: 0x0a2a2a,
+    roughness: 1
+  })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// 🌊 LOGO GROUP
 const logoGroup = new THREE.Group();
 scene.add(logoGroup);
 
-// 🧽 FALLBACK
+// 🧽 FALLBACK (always visible)
 const fallback = new THREE.Mesh(
   new THREE.BoxGeometry(2, 1, 0.5),
   new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    emissive: 0x222222,
+    color: 0x00aaff,
+    emissive: 0x003344,
     emissiveIntensity: 0.5
   })
 );
 logoGroup.add(fallback);
 
-// 🌟 LOAD IMAGE
+// 🌟 LOAD SPOOGLE IMAGE
 const loader = new THREE.TextureLoader();
 
-loader.load("Spoogle.png", (texture) => {
+loader.load(
+  "Spoogle.png",
 
-  console.log("✅ Loaded");
+  (texture) => {
 
-  texture.colorSpace = THREE.SRGBColorSpace;
+    // remove fallback
+    logoGroup.remove(fallback);
 
-  logoGroup.remove(fallback);
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(7, 3.5),
+      new THREE.MeshStandardMaterial({
+        map: texture,
 
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
+        // 🌈 NEON CORE
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 1.2,
 
-    // 🌟 VERY HIGH NEON FEEL (no blue washout)
-    emissive: new THREE.Color(0xffffff),
-    emissiveIntensity: 1.8,
+        roughness: 0.4,
+        metalness: 0.2
+      })
+    );
 
-    metalness: 0.2,
-    roughness: 0.5
-  });
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
 
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(7, 3.5),
-    material
-  );
+    logoGroup.add(mesh);
 
-  logoGroup.add(mesh);
+    // 🌈 SAMPLE COLOR FOR LIGHT
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-  // 🌈 LIGHT COLOR FROM IMAGE (BUT CONTROLLED)
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+    canvas.width = 64;
+    canvas.height = 64;
 
-  canvas.width = 64;
-  canvas.height = 64;
+    ctx.drawImage(texture.image, 0, 0, 64, 64);
 
-  ctx.drawImage(texture.image, 0, 0, 64, 64);
+    const data = ctx.getImageData(0, 0, 64, 64).data;
 
-  const data = ctx.getImageData(0, 0, 64, 64).data;
+    let r=0,g=0,b=0,count=0;
 
-  let r=0,g=0,b=0,count=0;
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i+1];
+      b += data[i+2];
+      count++;
+    }
 
-  for (let i = 0; i < data.length; i += 4) {
-    r += data[i];
-    g += data[i+1];
-    b += data[i+2];
-    count++;
+    const avgColor = new THREE.Color(
+      r/count/255,
+      g/count/255,
+      b/count/255
+    );
+
+    // 🌟 MAKE LIGHT FOLLOW LOGO COLOR
+    keyLight.color = avgColor;
+    blueGlow.color = avgColor;
+
+    logoGroup.userData.glow = avgColor;
   }
+);
 
-  const avgColor = new THREE.Color(
-    r/count/255,
-    g/count/255,
-    b/count/255
-  );
-
-  // 🌟 REMOVE BLUE BIAS
-  const neutralGlow = new THREE.Color(1, 0.95, 0.9);
-
-  light.color = avgColor.lerp(neutralGlow, 0.6);
-  light.intensity = 3.5; // 🔥 “75 mode brightness”
-
-});
-
-// 🫧 BUBBLES
+// 🫧 BUBBLES (react to light visually)
 const bubbles = [];
 
 for (let i = 0; i < 60; i++) {
   const b = new THREE.Mesh(
     new THREE.SphereGeometry(0.07, 8, 8),
     new THREE.MeshStandardMaterial({
-      color: 0xffffff,
+      color: 0x99ddff,
       transparent: true,
-      opacity: 0.35
+      opacity: 0.5
     })
   );
 
@@ -151,8 +173,16 @@ function animate() {
   camera.position.y += (-my * 1.5 - camera.position.y) * 0.05;
   camera.lookAt(0, 0, 0);
 
+  // 🌊 float logo
   logoGroup.position.y = Math.sin(Date.now() * 0.002) * 0.3;
 
+  // 🌟 pulsating neon intensity
+  const pulse = 0.5 + Math.sin(Date.now() * 0.003) * 0.5;
+
+  keyLight.intensity = 1.5 + pulse;
+  blueGlow.intensity = 1 + pulse * 0.8;
+
+  // 🫧 bubbles drift
   bubbles.forEach(b => {
     b.position.y += 0.01;
     if (b.position.y > 5) b.position.y = -2;
@@ -163,8 +193,9 @@ function animate() {
 
 animate();
 
+// 📏 resize
 window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
+  camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
