@@ -1,26 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SPOOGLE BLOOM SAFE 🌊✨</title>
+  <title>SPOOGLE SAFE NEON 🌊✨</title>
   <style>
     body { margin: 0; overflow: hidden; background: #001018; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-<!-- 🌟 REQUIRED POSTPROCESSING -->
-<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
-<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
-<script src="https://threejs.org/examples/js/postprocessing/UnrealBloomPass.js"></script>
-
 <script>
 
 // 🌊 SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x001018);
-scene.fog = new THREE.Fog(0x001018, 5, 20);
 
 // 🎥 CAMERA
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
@@ -29,30 +24,16 @@ camera.position.set(0, 1.5, 7);
 // 🎮 RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
-renderer.toneMapping = THREE.ReinhardToneMapping;
 document.body.appendChild(renderer.domElement);
 
 // 💡 LIGHTS
-scene.add(new THREE.AmbientLight(0x88ccff, 0.5));
+scene.add(new THREE.AmbientLight(0x88ccff, 0.6));
 
-const keyLight = new THREE.PointLight(0xffffff, 2);
-keyLight.position.set(3, 3, 3);
-scene.add(keyLight);
+const light = new THREE.PointLight(0xffffff, 1.5);
+light.position.set(3, 3, 3);
+scene.add(light);
 
-// 🌈 BLOOM (NEON GLOW)
-const composer = new THREE.EffectComposer(renderer);
-composer.addPass(new THREE.RenderPass(scene, camera));
-
-const bloom = new THREE.UnrealBloomPass(
-  new THREE.Vector2(innerWidth, innerHeight),
-  1.5,   // strength
-  0.5,   // radius
-  0.85   // threshold
-);
-
-composer.addPass(bloom);
-
-// 🌊 LOGO GROUP
+// 🌊 GROUP
 const logoGroup = new THREE.Group();
 scene.add(logoGroup);
 
@@ -75,30 +56,29 @@ loader.load(
 
   (texture) => {
 
-    console.log("✅ Spoogle loaded");
+    console.log("✅ Loaded");
 
     logoGroup.remove(fallback);
 
-    const mesh = new THREE.Mesh(
+    const baseMaterial = new THREE.MeshStandardMaterial({
+      map: texture,
+      transparent: true,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 1.2,
+      metalness: 0.3,
+      roughness: 0.4
+    });
+
+    const main = new THREE.Mesh(
       new THREE.PlaneGeometry(7, 3.5),
-      new THREE.MeshStandardMaterial({
-        map: texture,
-
-        // 🌈 NEON CORE
-        emissive: new THREE.Color(0xffffff),
-        emissiveIntensity: 1.2,
-
-        roughness: 0.4,
-        metalness: 0.3
-      })
+      baseMaterial
     );
 
-    logoGroup.add(mesh);
+    logoGroup.add(main);
 
-    // 🌈 sample image color → affects glow light
+    // 🌈 SAMPLE COLOR FOR LIGHT
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-
     canvas.width = 64;
     canvas.height = 64;
 
@@ -115,19 +95,33 @@ loader.load(
       count++;
     }
 
-    const avgColor = new THREE.Color(
+    const glowColor = new THREE.Color(
       r/count/255,
       g/count/255,
       b/count/255
     );
 
-    keyLight.color = avgColor;
+    light.color = glowColor;
+
+    // 🌟 CREATE FAKE BLOOM LAYERS
+    for (let i = 0; i < 3; i++) {
+      const glow = new THREE.Mesh(
+        new THREE.PlaneGeometry(7 + i*0.3, 3.5 + i*0.3),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 0.15 - i*0.04,
+          blending: THREE.AdditiveBlending
+        })
+      );
+
+      logoGroup.add(glow);
+    }
+
   },
 
   undefined,
-  (err) => {
-    console.error("❌ Texture failed:", err);
-  }
+  (err) => console.error("❌ Load failed:", err)
 );
 
 // 🫧 BUBBLES
@@ -139,7 +133,7 @@ for (let i = 0; i < 60; i++) {
     new THREE.MeshStandardMaterial({
       color: 0x99ddff,
       transparent: true,
-      opacity: 0.4
+      opacity: 0.5
     })
   );
 
@@ -153,7 +147,7 @@ for (let i = 0; i < 60; i++) {
   bubbles.push(b);
 }
 
-// 🖱️ MOUSE CONTROL
+// 🖱️ CONTROL
 let mx = 0, my = 0;
 
 document.addEventListener("mousemove", (e) => {
@@ -176,19 +170,15 @@ function animate() {
     if (b.position.y > 5) b.position.y = -2;
   });
 
-  // 🌟 IMPORTANT: bloom render
-  composer.render();
+  renderer.render(scene, camera);
 }
 
 animate();
 
-// 📏 resize safe
 window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
+  camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-
   renderer.setSize(innerWidth, innerHeight);
-  composer.setSize(innerWidth, innerHeight);
 });
 
 </script>
