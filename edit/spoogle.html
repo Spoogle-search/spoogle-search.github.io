@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SPOOGLE SAFE NEON 🌊✨</title>
+  <title>SPOOGLE CLEAN FIX 🌊✨</title>
   <style>
     body { margin: 0; overflow: hidden; background: #001018; }
     canvas { display: block; }
@@ -16,6 +16,7 @@
 // 🌊 SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x001018);
+scene.fog = new THREE.Fog(0x001018, 6, 25);
 
 // 🎥 CAMERA
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
@@ -26,10 +27,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// 💡 LIGHTS
-scene.add(new THREE.AmbientLight(0x88ccff, 0.6));
+// 💡 LIGHTS (SAFE LEVELS)
+const ambient = new THREE.AmbientLight(0x88ccff, 0.6);
+scene.add(ambient);
 
-const light = new THREE.PointLight(0xffffff, 1.5);
+const light = new THREE.PointLight(0xffffff, 1.2, 30);
 light.position.set(3, 3, 3);
 scene.add(light);
 
@@ -42,8 +44,8 @@ const fallback = new THREE.Mesh(
   new THREE.BoxGeometry(2, 1, 0.5),
   new THREE.MeshStandardMaterial({
     color: 0x00aaff,
-    emissive: 0x003344,
-    emissiveIntensity: 0.5
+    emissive: 0x001122,
+    emissiveIntensity: 0.3
   })
 );
 logoGroup.add(fallback);
@@ -56,29 +58,36 @@ loader.load(
 
   (texture) => {
 
-    console.log("✅ Loaded");
+    console.log("✅ Spoogle loaded");
 
+    // 🧠 FIX COLOR ACCURACY (IMPORTANT)
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    // remove fallback
     logoGroup.remove(fallback);
 
-    const baseMaterial = new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshStandardMaterial({
       map: texture,
-      transparent: true,
-      emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 1.2,
-      metalness: 0.3,
-      roughness: 0.4
+
+      // 🌈 SAFE EMISSIVE (NOT OVERPOWERING)
+      emissive: new THREE.Color(0x111111),
+      emissiveIntensity: 0.25,
+
+      metalness: 0.1,
+      roughness: 0.7
     });
 
-    const main = new THREE.Mesh(
+    const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(7, 3.5),
-      baseMaterial
+      material
     );
 
-    logoGroup.add(main);
+    logoGroup.add(mesh);
 
-    // 🌈 SAMPLE COLOR FOR LIGHT
+    // 🌈 SAMPLE IMAGE COLOR FOR LIGHT (SOFT)
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
+
     canvas.width = 64;
     canvas.height = 64;
 
@@ -95,28 +104,15 @@ loader.load(
       count++;
     }
 
-    const glowColor = new THREE.Color(
+    const avgColor = new THREE.Color(
       r/count/255,
       g/count/255,
       b/count/255
     );
 
-    light.color = glowColor;
-
-    // 🌟 CREATE FAKE BLOOM LAYERS
-    for (let i = 0; i < 3; i++) {
-      const glow = new THREE.Mesh(
-        new THREE.PlaneGeometry(7 + i*0.3, 3.5 + i*0.3),
-        new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-          opacity: 0.15 - i*0.04,
-          blending: THREE.AdditiveBlending
-        })
-      );
-
-      logoGroup.add(glow);
-    }
+    // 🌟 SOFT LIGHT (prevents white blowout)
+    light.color = avgColor;
+    light.intensity = 0.9;
 
   },
 
@@ -133,7 +129,7 @@ for (let i = 0; i < 60; i++) {
     new THREE.MeshStandardMaterial({
       color: 0x99ddff,
       transparent: true,
-      opacity: 0.5
+      opacity: 0.4
     })
   );
 
@@ -147,7 +143,7 @@ for (let i = 0; i < 60; i++) {
   bubbles.push(b);
 }
 
-// 🖱️ CONTROL
+// 🖱️ CAMERA CONTROL
 let mx = 0, my = 0;
 
 document.addEventListener("mousemove", (e) => {
@@ -163,8 +159,10 @@ function animate() {
   camera.position.y += (-my * 1.5 - camera.position.y) * 0.05;
   camera.lookAt(0, 0, 0);
 
+  // 🌊 floating logo
   logoGroup.position.y = Math.sin(Date.now() * 0.002) * 0.3;
 
+  // 🫧 bubbles
   bubbles.forEach(b => {
     b.position.y += 0.01;
     if (b.position.y > 5) b.position.y = -2;
@@ -175,8 +173,9 @@ function animate() {
 
 animate();
 
+// 📏 resize safe
 window.addEventListener("resize", () => {
-  camera.aspect = innerWidth/innerHeight;
+  camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
