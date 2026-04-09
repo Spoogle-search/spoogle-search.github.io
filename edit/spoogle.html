@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SPOOGLE 3D Logo 🌊</title>
+  <title>SPOOGLE FIXED 🌊</title>
   <style>
     body { margin: 0; overflow: hidden; background: #001a22; }
-    canvas { display: block; }
-
     #hint {
       position: absolute;
       top: 10px;
@@ -18,75 +16,57 @@
 </head>
 <body>
 
-<div id="hint">Place "spoogle.png" in the same folder as this file 🌊</div>
+<div id="hint">
+  Loading SPOOGLE... check console if image fails 🌊
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
 
-// 🌊 Scene
+// 🌊 SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x001a22);
 
-// 🎥 Camera
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-camera.position.set(0, 0, 8);
+// 🎥 CAMERA
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+camera.position.set(0, 1.5, 6);
 
-// 🎮 Renderer
+// 🎮 RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// 💡 Lights (important for glow feel)
-const ambient = new THREE.AmbientLight(0x66ccff, 0.6);
-scene.add(ambient);
+// 💡 LIGHTS (safe setup)
+scene.add(new THREE.AmbientLight(0x88ccff, 0.8));
 
-const light = new THREE.PointLight(0x00aaff, 2);
+const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 5, 5);
 scene.add(light);
 
-// 🌊 Underwater fog glow feel
-scene.fog = new THREE.Fog(0x001a22, 5, 20);
+// 🌊 GROUP (logo container)
+let logoGroup = new THREE.Group();
+scene.add(logoGroup);
 
-// 🌟 SPOOGLE LOGO (IMAGE)
-const loader = new THREE.TextureLoader();
+// 🧽 FALLBACK TEXT (always works)
+let fontLoadedText;
 
-let logo;
+function createFallback() {
+  const geo = new THREE.BoxGeometry(2, 1, 0.5);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x00aaff,
+    emissive: 0x003344
+  });
 
-loader.load(
-  "spoogle.png", // 👈 YOUR IMAGE HERE
-  (texture) => {
+  const box = new THREE.Mesh(geo, mat);
+  logoGroup.add(box);
+}
 
-    const geometry = new THREE.PlaneGeometry(5, 3);
-
-    const material = new THREE.MeshStandardMaterial({
-      map: texture,
-      transparent: true,
-
-      // 💡 fake glow effect
-      emissive: new THREE.Color(0x00aaff),
-      emissiveIntensity: 1,
-      metalness: 0.2,
-      roughness: 0.3
-    });
-
-    logo = new THREE.Mesh(geometry, material);
-
-    scene.add(logo);
-  }
-);
-
-// 🫧 FLOATING PARTICLES (ocean vibe)
+// 🫧 BUBBLES
 const bubbles = [];
-
-for (let i = 0; i < 60; i++) {
-  const bubble = new THREE.Mesh(
-    new THREE.SphereGeometry(0.1, 8, 8),
+for (let i = 0; i < 50; i++) {
+  const b = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 8, 8),
     new THREE.MeshStandardMaterial({
       color: 0x99ddff,
       transparent: true,
@@ -94,43 +74,78 @@ for (let i = 0; i < 60; i++) {
     })
   );
 
-  bubble.position.set(
-    (Math.random() - 0.5) * 20,
+  b.position.set(
     (Math.random() - 0.5) * 10,
-    (Math.random() - 0.5) * 10
+    Math.random() * 5,
+    (Math.random() - 0.5) * 6
   );
 
-  scene.add(bubble);
-  bubbles.push(bubble);
+  scene.add(b);
+  bubbles.push(b);
 }
 
-// 🖱️ Mouse camera movement
+// 🌟 LOAD TEXTURE
+const loader = new THREE.TextureLoader();
+
+let loaded = false;
+
+loader.load(
+  "Spoogle.png",
+
+  // ✅ SUCCESS
+  (texture) => {
+    console.log("✅ Spoogle.png loaded");
+
+    const geo = new THREE.PlaneGeometry(4, 2);
+
+    const mat = new THREE.MeshStandardMaterial({
+      map: texture,
+      transparent: true,
+      emissive: new THREE.Color(0x00aaff),
+      emissiveIntensity: 0.8
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+
+    logoGroup.add(mesh);
+    loaded = true;
+  },
+
+  // 📦 progress
+  undefined,
+
+  // ❌ ERROR
+  (err) => {
+    console.error("❌ Image failed to load:", err);
+    console.warn("Using fallback 3D object instead 🧽");
+
+    createFallback();
+  }
+);
+
+// 🖱️ CAMERA CONTROL
 let mx = 0, my = 0;
 
 document.addEventListener("mousemove", (e) => {
-  mx = (e.clientX / window.innerWidth - 0.5) * 2;
-  my = (e.clientY / window.innerHeight - 0.5) * 2;
+  mx = (e.clientX / innerWidth - 0.5) * 2;
+  my = (e.clientY / innerHeight - 0.5) * 2;
 });
 
-// 🔁 Animation loop
+// 🔁 LOOP
 function animate() {
   requestAnimationFrame(animate);
 
-  // camera drift
   camera.position.x += (mx * 2 - camera.position.x) * 0.05;
-  camera.position.y += (-my * 2 - camera.position.y) * 0.05;
+  camera.position.y += (-my * 1.5 - camera.position.y) * 0.05;
   camera.lookAt(0, 0, 0);
 
-  // 🌊 float logo gently
-  if (logo) {
-    logo.position.y = Math.sin(Date.now() * 0.002) * 0.3;
-    logo.rotation.y = Math.sin(Date.now() * 0.001) * 0.2;
-  }
+  // 🌊 float logo
+  logoGroup.position.y = Math.sin(Date.now() * 0.002) * 0.3;
 
-  // 🫧 bubbles move upward
+  // 🫧 bubbles rise
   bubbles.forEach(b => {
     b.position.y += 0.01;
-    if (b.position.y > 5) b.position.y = -5;
+    if (b.position.y > 5) b.position.y = -2;
   });
 
   renderer.render(scene, camera);
@@ -138,11 +153,11 @@ function animate() {
 
 animate();
 
-// 📱 resize fix
+// 📱 resize safe
 window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(innerWidth, innerHeight);
 });
 
 </script>
