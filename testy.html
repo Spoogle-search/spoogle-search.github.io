@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab Test Browser</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  .tab-bar {
+    display: flex;
+    background: #333;
+    padding: 5px;
+    gap: 5px;
+  }
+  .tab-bar button {
+    padding: 5px 10px;
+    cursor: pointer;
+    color: white;
+    background: #555;
+    border: none;
+    border-radius: 4px;
+  }
+  .tab-bar button.active {
+    background: #ffcc00;
+    color: black;
+  }
+  #tabs-container {
+    width: 100%;
+    height: calc(100vh - 40px);
+    position: relative;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <button id="new-tab-btn">➕ New Tab</button>
+  <div id="tabs-buttons"></div>
+</div>
+
+<div id="tabs-container"></div>
+
+<script>
+let tabCounter = 0;
+let tabs = {};
+
+const tabsButtons = document.getElementById('tabs-buttons');
+const tabsContainer = document.getElementById('tabs-container');
+const newTabBtn = document.getElementById('new-tab-btn');
+
+// Function to create a new tab
+function createTab(url = 'index.html') {
+  tabCounter++;
+  const tabId = 'tab-' + tabCounter;
+
+  // Create tab button
+  const btn = document.createElement('button');
+  btn.textContent = 'Tab ' + tabCounter;
+  btn.id = tabId + '-btn';
+  btn.onclick = () => switchTab(tabId);
+  tabsButtons.appendChild(btn);
+
+  // Create iframe
+  const iframe = document.createElement('iframe');
+  iframe.src = url;
+  iframe.id = tabId;
+  tabsContainer.appendChild(iframe);
+
+  tabs[tabId] = { btn, iframe };
+  switchTab(tabId);
+}
+
+// Function to switch tabs
+function switchTab(tabId) {
+  for (let id in tabs) {
+    tabs[id].iframe.style.display = 'none';
+    tabs[id].btn.classList.remove('active');
+  }
+  tabs[tabId].iframe.style.display = 'block';
+  tabs[tabId].btn.classList.add('active');
+}
+
+// Override all links inside iframes to open in new tab
+function setupLinkInterception(iframe) {
+  iframe.onload = () => {
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const links = doc.querySelectorAll('a');
+      links.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          createTab(link.href);
+        });
+      });
+    } catch (err) {
+      // Cross-origin links can't be accessed, ignore
+    }
+  };
+}
+
+// Create initial tab
+createTab('index.html');
+</script>
+
+</body>
+</html>
