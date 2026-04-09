@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SPOOGLE PIXEL FIX 🌈</title>
+  <title>SPOOGLE BLOOM SAFE 🌊✨</title>
   <style>
     body { margin: 0; overflow: hidden; background: #001018; }
   </style>
@@ -10,111 +10,185 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
+<!-- 🌟 REQUIRED POSTPROCESSING -->
+<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
 <script>
 
+// 🌊 SCENE
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x001018);
+scene.fog = new THREE.Fog(0x001018, 5, 20);
 
+// 🎥 CAMERA
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-camera.position.z = 6;
+camera.position.set(0, 1.5, 7);
 
+// 🎮 RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ReinhardToneMapping;
 document.body.appendChild(renderer.domElement);
 
-// 💡 SAFE LIGHT
-scene.add(new THREE.AmbientLight(0xffffff, 1));
+// 💡 LIGHTS
+scene.add(new THREE.AmbientLight(0x88ccff, 0.5));
 
-// 🧽 FALLBACK (ALWAYS SHOWS)
+const keyLight = new THREE.PointLight(0xffffff, 2);
+keyLight.position.set(3, 3, 3);
+scene.add(keyLight);
+
+// 🌈 BLOOM (NEON GLOW)
+const composer = new THREE.EffectComposer(renderer);
+composer.addPass(new THREE.RenderPass(scene, camera));
+
+const bloom = new THREE.UnrealBloomPass(
+  new THREE.Vector2(innerWidth, innerHeight),
+  1.5,   // strength
+  0.5,   // radius
+  0.85   // threshold
+);
+
+composer.addPass(bloom);
+
+// 🌊 LOGO GROUP
+const logoGroup = new THREE.Group();
+scene.add(logoGroup);
+
+// 🧽 FALLBACK (always visible)
 const fallback = new THREE.Mesh(
   new THREE.BoxGeometry(2, 1, 0.5),
-  new THREE.MeshBasicMaterial({ color: 0x00aaff })
+  new THREE.MeshStandardMaterial({
+    color: 0x00aaff,
+    emissive: 0x003344,
+    emissiveIntensity: 0.5
+  })
 );
-scene.add(fallback);
+logoGroup.add(fallback);
 
-// 🌈 LOADER
+// 🌟 LOAD IMAGE
 const loader = new THREE.TextureLoader();
 
-let mesh;
-let material;
+loader.load(
+  "Spoogle.png",
 
-loader.load("Spoogle.png", (texture) => {
+  (texture) => {
 
-  console.log("✅ Texture loaded");
+    console.log("✅ Spoogle loaded");
 
-  // remove fallback
-  scene.remove(fallback);
+    logoGroup.remove(fallback);
 
-  material = new THREE.ShaderMaterial({
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(7, 3.5),
+      new THREE.MeshStandardMaterial({
+        map: texture,
 
-    uniforms: {
-      uTexture: { value: texture },
-      uTime: { value: 0 }
-    },
+        // 🌈 NEON CORE
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 1.2,
 
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
+        roughness: 0.4,
+        metalness: 0.3
+      })
+    );
 
-    fragmentShader: `
-      uniform sampler2D uTexture;
-      uniform float uTime;
-      varying vec2 vUv;
+    logoGroup.add(mesh);
 
-      void main() {
+    // 🌈 sample image color → affects glow light
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-        vec4 tex = texture2D(uTexture, vUv);
+    canvas.width = 64;
+    canvas.height = 64;
 
-        // 🧠 SAFETY: never fully disappear
-        if (tex.a < 0.05) {
-          discard;
-        }
+    ctx.drawImage(texture.image, 0, 0, 64, 64);
 
-        // 🌈 per-pixel glow
-        float pulse = 0.7 + 0.3 * sin(uTime * 2.0);
+    const data = ctx.getImageData(0, 0, 64, 64).data;
 
-        vec3 glow = tex.rgb * pulse;
+    let r=0,g=0,b=0,count=0;
 
-        gl_FragColor = vec4(glow, tex.a);
-      }
-    `,
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i+1];
+      b += data[i+2];
+      count++;
+    }
 
-    transparent: true
-  });
+    const avgColor = new THREE.Color(
+      r/count/255,
+      g/count/255,
+      b/count/255
+    );
 
-  mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(6, 3),
-    material
+    keyLight.color = avgColor;
+  },
+
+  undefined,
+  (err) => {
+    console.error("❌ Texture failed:", err);
+  }
+);
+
+// 🫧 BUBBLES
+const bubbles = [];
+
+for (let i = 0; i < 60; i++) {
+  const b = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 8, 8),
+    new THREE.MeshStandardMaterial({
+      color: 0x99ddff,
+      transparent: true,
+      opacity: 0.4
+    })
   );
 
-  scene.add(mesh);
+  b.position.set(
+    (Math.random() - 0.5) * 10,
+    Math.random() * 5,
+    (Math.random() - 0.5) * 6
+  );
 
+  scene.add(b);
+  bubbles.push(b);
+}
+
+// 🖱️ MOUSE CONTROL
+let mx = 0, my = 0;
+
+document.addEventListener("mousemove", (e) => {
+  mx = (e.clientX / innerWidth - 0.5) * 2;
+  my = (e.clientY / innerHeight - 0.5) * 2;
 });
 
 // 🔁 LOOP
 function animate() {
   requestAnimationFrame(animate);
 
-  if (material) {
-    material.uniforms.uTime.value += 0.02;
-  }
+  camera.position.x += (mx * 2 - camera.position.x) * 0.05;
+  camera.position.y += (-my * 1.5 - camera.position.y) * 0.05;
+  camera.lookAt(0, 0, 0);
 
-  if (mesh) {
-    mesh.position.y = Math.sin(Date.now() * 0.002) * 0.2;
-  }
+  logoGroup.position.y = Math.sin(Date.now() * 0.002) * 0.3;
 
-  renderer.render(scene, camera);
+  bubbles.forEach(b => {
+    b.position.y += 0.01;
+    if (b.position.y > 5) b.position.y = -2;
+  });
+
+  // 🌟 IMPORTANT: bloom render
+  composer.render();
 }
 
 animate();
 
+// 📏 resize safe
 window.addEventListener("resize", () => {
-  camera.aspect = innerWidth/innerHeight;
+  camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
+
   renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
 });
 
 </script>
