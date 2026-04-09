@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Site Tabs Test</title>
+<title>Spoogle Tab Browser</title>
 <style>
   body { margin: 0; font-family: Arial, sans-serif; }
   .tab-bar { display: flex; background: #333; padding: 5px; gap: 5px; }
@@ -31,7 +31,7 @@ const tabsContainer = document.getElementById('tabs-container');
 const newTabBtn = document.getElementById('new-tab-btn');
 
 // Function to create a new tab
-function createTab(url = 'index.html') {
+function createTab(url = 'https://spoogle-search.github.io/edit/main.html') {
   tabCounter++;
   const tabId = 'tab-' + tabCounter;
 
@@ -74,19 +74,19 @@ function interceptLinks(iframe) {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const href = link.getAttribute('href');
-        if (href) createTab(href); // Open in new tab
+        if (href) createTab(href); // Open in new internal tab
       });
     });
   } catch(err) {
-    // Cross-origin links can't be accessed
+    // Cross-origin links cannot be intercepted
   }
 }
 
 // New tab button
 newTabBtn.onclick = () => createTab();
 
-// Start with initial tab
-createTab('./main.html');
+// Start with initial tab loading main.html
+createTab('https://spoogle-search.github.io/edit/main.html');
 </script>
 
 </body>
