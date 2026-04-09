@@ -3,44 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tab Test Browser</title>
+<title>Site Tabs Test</title>
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-  }
-  .tab-bar {
-    display: flex;
-    background: #333;
-    padding: 5px;
-    gap: 5px;
-  }
-  .tab-bar button {
-    padding: 5px 10px;
-    cursor: pointer;
-    color: white;
-    background: #555;
-    border: none;
-    border-radius: 4px;
-  }
-  .tab-bar button.active {
-    background: #ffcc00;
-    color: black;
-  }
-  #tabs-container {
-    width: 100%;
-    height: calc(100vh - 40px);
-    position: relative;
-  }
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: none;
-  }
+  body { margin: 0; font-family: Arial, sans-serif; }
+  .tab-bar { display: flex; background: #333; padding: 5px; gap: 5px; }
+  .tab-bar button { padding: 5px 10px; cursor: pointer; color: white; background: #555; border: none; border-radius: 4px; }
+  .tab-bar button.active { background: #ffcc00; color: black; }
+  #tabs-container { width: 100%; height: calc(100vh - 40px); position: relative; }
+  iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; display: none; }
 </style>
 </head>
 <body>
@@ -80,9 +50,12 @@ function createTab(url = 'index.html') {
 
   tabs[tabId] = { btn, iframe };
   switchTab(tabId);
+
+  // Intercept links in this iframe
+  iframe.onload = () => interceptLinks(iframe);
 }
 
-// Function to switch tabs
+// Switch visible tab
 function switchTab(tabId) {
   for (let id in tabs) {
     tabs[id].iframe.style.display = 'none';
@@ -92,25 +65,27 @@ function switchTab(tabId) {
   tabs[tabId].btn.classList.add('active');
 }
 
-// Override all links inside iframes to open in new tab
-function setupLinkInterception(iframe) {
-  iframe.onload = () => {
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      const links = doc.querySelectorAll('a');
-      links.forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          createTab(link.href);
-        });
+// Intercept links inside an iframe
+function interceptLinks(iframe) {
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    const links = doc.querySelectorAll('a');
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (href) createTab(href); // Open in new tab
       });
-    } catch (err) {
-      // Cross-origin links can't be accessed, ignore
-    }
-  };
+    });
+  } catch(err) {
+    // Cross-origin links can't be accessed
+  }
 }
 
-// Create initial tab
+// New tab button
+newTabBtn.onclick = () => createTab();
+
+// Start with initial tab
 createTab('index.html');
 </script>
 
