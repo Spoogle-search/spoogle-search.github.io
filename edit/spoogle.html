@@ -1,70 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SPOOGLE FIXED 🌊</title>
+  <title>SPOOGLE NEON 🌊✨</title>
   <style>
     body { margin: 0; overflow: hidden; background: #001a22; }
-    #hint {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-family: sans-serif;
-      opacity: 0.7;
-    }
+    canvas { display: block; }
   </style>
 </head>
 <body>
 
-<div id="hint">
-  Loading SPOOGLE... check console if image fails 🌊
-</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- 🌟 POST PROCESSING (BLOOM) -->
+<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
 <script>
 
 // 🌊 SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x001a22);
+scene.fog = new THREE.Fog(0x001a22, 5, 25);
 
 // 🎥 CAMERA
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-camera.position.set(0, 1.5, 6);
+camera.position.set(0, 1.5, 8);
 
 // 🎮 RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ReinhardToneMapping;
 document.body.appendChild(renderer.domElement);
 
-// 💡 LIGHTS (safe setup)
-scene.add(new THREE.AmbientLight(0x88ccff, 0.8));
+// 💡 LIGHTS
+scene.add(new THREE.AmbientLight(0x88ccff, 0.5));
 
-const light = new THREE.DirectionalLight(0xffffff, 1);
+const light = new THREE.PointLight(0xffffff, 2);
 light.position.set(5, 5, 5);
 scene.add(light);
 
-// 🌊 GROUP (logo container)
-let logoGroup = new THREE.Group();
+// 🌈 BLOOM EFFECT (NEON GLOW)
+const composer = new THREE.EffectComposer(renderer);
+composer.addPass(new THREE.RenderPass(scene, camera));
+
+const bloom = new THREE.UnrealBloomPass(
+  new THREE.Vector2(innerWidth, innerHeight),
+  1.5,   // strength
+  0.4,   // radius
+  0.85   // threshold
+);
+
+composer.addPass(bloom);
+
+// 🌊 GROUP
+const logoGroup = new THREE.Group();
 scene.add(logoGroup);
-
-// 🧽 FALLBACK TEXT (always works)
-let fontLoadedText;
-
-function createFallback() {
-  const geo = new THREE.BoxGeometry(2, 1, 0.5);
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0x00aaff,
-    emissive: 0x003344
-  });
-
-  const box = new THREE.Mesh(geo, mat);
-  logoGroup.add(box);
-}
 
 // 🫧 BUBBLES
 const bubbles = [];
-for (let i = 0; i < 50; i++) {
+
+for (let i = 0; i < 60; i++) {
   const b = new THREE.Mesh(
     new THREE.SphereGeometry(0.08, 8, 8),
     new THREE.MeshStandardMaterial({
@@ -84,46 +80,54 @@ for (let i = 0; i < 50; i++) {
   bubbles.push(b);
 }
 
-// 🌟 LOAD TEXTURE
+// 🌟 LOAD SPOOGLE IMAGE
 const loader = new THREE.TextureLoader();
 
-let loaded = false;
+let glowColor = new THREE.Color(0xffffff);
 
-loader.load(
-  "Spoogle.png",
+loader.load("Spoogle.png", (texture) => {
 
-  // ✅ SUCCESS
-  (texture) => {
-    console.log("✅ Spoogle.png loaded");
+  const geo = new THREE.PlaneGeometry(8, 4);
 
-    const geo = new THREE.PlaneGeometry(4, 2);
+  const mat = new THREE.MeshStandardMaterial({
+    map: texture,
+    transparent: true,
+    emissive: new THREE.Color(0xffffff),
+    emissiveIntensity: 1
+  });
 
-    const mat = new THREE.MeshStandardMaterial({
-      map: texture,
-      transparent: true,
-      emissive: new THREE.Color(0x00aaff),
-      emissiveIntensity: 0.8
-    });
+  const mesh = new THREE.Mesh(geo, mat);
+  logoGroup.add(mesh);
 
-    const mesh = new THREE.Mesh(geo, mat);
+  // 🌈 sample image color for glow
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-    logoGroup.add(mesh);
-    loaded = true;
-  },
+  canvas.width = 64;
+  canvas.height = 64;
 
-  // 📦 progress
-  undefined,
+  ctx.drawImage(texture.image, 0, 0, 64, 64);
 
-  // ❌ ERROR
-  (err) => {
-    console.error("❌ Image failed to load:", err);
-    console.warn("Using fallback 3D object instead 🧽");
+  const data = ctx.getImageData(0, 0, 64, 64).data;
 
-    createFallback();
+  let r = 0, g = 0, b = 0, count = 0;
+
+  for (let i = 0; i < data.length; i += 4) {
+    r += data[i];
+    g += data[i + 1];
+    b += data[i + 2];
+    count++;
   }
-);
 
-// 🖱️ CAMERA CONTROL
+  glowColor = new THREE.Color(
+    r / count / 255,
+    g / count / 255,
+    b / count / 255
+  );
+
+});
+
+// 🖱️ MOUSE CAMERA
 let mx = 0, my = 0;
 
 document.addEventListener("mousemove", (e) => {
@@ -142,22 +146,34 @@ function animate() {
   // 🌊 float logo
   logoGroup.position.y = Math.sin(Date.now() * 0.002) * 0.3;
 
-  // 🫧 bubbles rise
+  // 🌈 neon pulsing glow
+  logoGroup.children.forEach(child => {
+    if (child.material) {
+      const pulse = 0.5 + Math.sin(Date.now() * 0.003) * 0.5;
+
+      child.material.emissive = glowColor;
+      child.material.emissiveIntensity = 0.5 + pulse * 1.5;
+    }
+  });
+
+  // 🫧 bubbles
   bubbles.forEach(b => {
     b.position.y += 0.01;
     if (b.position.y > 5) b.position.y = -2;
   });
 
-  renderer.render(scene, camera);
+  // 🌟 RENDER WITH BLOOM
+  composer.render();
 }
 
 animate();
 
-// 📱 resize safe
+// 📏 resize
 window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
+  camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
 });
 
 </script>
